@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Three.js with Tailwind</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+      body { overflow: hidden; }
+    </style>
+  </head>
+  <body class="bg-transparent text-white">
+    <!-- Canvas positioned at the back, z-index -10 -->
+    <canvas id="three-canvas" class="fixed top-0 left-0 w-full h-full -z-10"></canvas>
+    
+    <!-- Images container positioned at the back with fixed positioning -->
+    <div class="images-container fixed top-0 left-0 w-full h-full -z-10 flex flex-col items-center justify-center">
+      <img src="/img2.jpg" alt="Image 1" class="absolute w-1/2 opacity-0">
+      <img src="/img2.jpg" alt="Image 2" class="absolute w-1/2 opacity-0">
+      <img src="/img2.jpg" alt="Image 3" class="absolute w-1/2 opacity-0">
+    </div>
+    
+    <!-- Content on top -->
+    <div class="relative z-10 flex flex-col items-center justify-center min-h-screen">
+      <h1 class="text-[clamp(12rem,20vw,30rem)] md:text-[clamp(15rem,25vw,40rem)] xl:text-[50vw] font-bold mb-4 leading-none">The Slider</h1>
+      <p class="text-xl">Be creative your way!</p>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
