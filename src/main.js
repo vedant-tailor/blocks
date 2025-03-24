@@ -3,14 +3,67 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import vertexShader from './shaders/vertex.glsl'
 import fragmentShader from './shaders/fragment.glsl'
-// import LocomotiveScroll from 'locomotive-scroll'
+import LocomotiveScroll from 'locomotive-scroll'
 import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
+// SplitText is a premium GSAP plugin, so we won't use it
+
+// Register GSAP plugins
+gsap.registerPlugin(ScrollTrigger)
 
 // Create the scene
 const scene = new THREE.Scene()
 
-// Initialize locomotive scroll
-// const scroll = new LocomotiveScroll()
+// Initialize locomotive scroll with optimized settings
+const scroll = new LocomotiveScroll({
+  el: document.querySelector('[data-scroll-container]'),
+  smooth: true,
+  multiplier: 1,
+  lerp: 0.1, // Slightly increased for smoother transitions
+  smartphone: {
+    smooth: true,
+    multiplier: 0.8 // Reduced multiplier for mobile for better performance
+  },
+  tablet: {
+    smooth: true,
+    multiplier: 0.9
+  },
+  reloadOnContextChange: true,
+  inertia: 0.6 // Added inertia for more natural feeling
+})
+
+// Better ScrollTrigger integration with Locomotive Scroll
+ScrollTrigger.scrollerProxy("[data-scroll-container]", {
+  scrollTop(value) {
+    return arguments.length 
+      ? scroll.scrollTo(value, { duration: 0, disableLerp: true })
+      : scroll.scroll.instance.scroll.y;
+  },
+  getBoundingClientRect() {
+    return {
+      top: 0, 
+      left: 0, 
+      width: window.innerWidth, 
+      height: window.innerHeight
+    };
+  },
+  pinType: document.querySelector("[data-scroll-container]").style.transform ? "transform" : "fixed"
+});
+
+// Each time the window updates, we should refresh ScrollTrigger and then update LocomotiveScroll
+ScrollTrigger.addEventListener("refresh", () => scroll.update());
+
+// After everything is set up, refresh() ScrollTrigger and update LocomotiveScroll
+ScrollTrigger.refresh();
+
+// Handle resize events properly
+window.addEventListener("resize", () => {
+  // Delay the update for better performance
+  setTimeout(() => {
+    ScrollTrigger.refresh();
+    scroll.update();
+  }, 200);
+});
 
 // Set fixed values for animation parameters
 const params = {
@@ -75,7 +128,8 @@ images.forEach((img, index) => {
         uBlockCount: { value: params.blockCount },
         uDistortionIntensity: { value: params.distortionIntensity },
         uDistanceMultiplier: { value: params.distanceMultiplier },
-        uAnimationSpeed: { value: params.animationSpeed }
+        uAnimationSpeed: { value: params.animationSpeed },
+        uScrollProgress: { value: 0.0 } // New uniform for scroll progress
       },
       side: THREE.DoubleSide
     })
@@ -99,131 +153,6 @@ images.forEach((img, index) => {
     img.onload()
   }
 })
-
-// Grid images with shader effect
-const gridPlanes = []
-const gridImages = document.querySelectorAll('.grid-image')
-
-// Create renderer for grid items
-const setupGridEffect = () => {
-  gridImages.forEach((img, index) => {
-    const container = img.parentElement
-    
-    // Create a new canvas for this grid item
-    const canvas = document.createElement('canvas')
-    canvas.classList.add('absolute', 'top-0', 'left-0', 'w-full', 'h-full')
-    canvas.style.zIndex = '1'
-    container.appendChild(canvas)
-    
-    // Hide the original image
-    img.style.opacity = '0'
-    
-    // Create renderer
-    const renderer = new THREE.WebGLRenderer({ 
-      canvas, 
-      antialias: true, 
-      alpha: true 
-    })
-    renderer.setSize(container.offsetWidth, container.offsetHeight)
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-    
-    // Create camera
-    const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000)
-    camera.position.z = 2
-    
-    // Load texture
-    const texture = new THREE.TextureLoader().load(img.src)
-    texture.minFilter = THREE.LinearFilter
-    texture.magFilter = THREE.LinearFilter
-    
-    // Create shader material
-    const material = new THREE.ShaderMaterial({
-      vertexShader,
-      fragmentShader,
-      uniforms: {
-        time: { value: 0 },
-        uTexture: { value: texture },
-        uMouse: { value: new THREE.Vector2(0.5, 0.5) },
-        uHover: { value: 0.0 },
-        uMoving: { value: 0.0 },
-        uLastPos: { value: new THREE.Vector2(0.5, 0.5) },
-        uBlockCount: { value: params.blockCount },
-        uDistortionIntensity: { value: params.distortionIntensity },
-        uDistanceMultiplier: { value: params.distanceMultiplier },
-        uAnimationSpeed: { value: params.animationSpeed }
-      },
-      side: THREE.DoubleSide
-    })
-    
-    // Create plane
-    const geometry = new THREE.PlaneGeometry(1.5, 1.5, 32, 32)
-    const plane = new THREE.Mesh(geometry, material)
-    
-    // Create scene
-    const scene = new THREE.Scene()
-    scene.add(plane)
-    
-    // Add to gridPlanes array
-    gridPlanes.push({
-      container,
-      renderer,
-      scene,
-      camera,
-      plane,
-      material
-    })
-    
-    // Add mousemove event for this grid item
-    container.addEventListener('mousemove', (event) => {
-      const rect = container.getBoundingClientRect()
-      const x = (event.clientX - rect.left) / rect.width
-      const y = (event.clientY - rect.top) / rect.height  // Remove the 1.0 - inversion
-      
-      // Calculate movement distance
-      const currentMouse = new THREE.Vector2(x, y)
-      const prevMousePos = plane.userData.prevMouse || new THREE.Vector2(0.5, 0.5)
-      
-      const moveDist = Math.sqrt(
-        Math.pow(currentMouse.x - prevMousePos.x, 2) + 
-        Math.pow(currentMouse.y - prevMousePos.y, 2)
-      )
-      
-      // Update movement strength
-      const strength = Math.min(moveDist * 20, 1.0)
-      
-      // Update uniforms
-      material.uniforms.uMouse.value.set(x, y)
-      material.uniforms.uHover.value = 1.0
-      material.uniforms.uMoving.value = strength
-      
-      // Store previous position
-      plane.userData.prevMouse = currentMouse.clone()
-    })
-    
-    // Add mouseleave event
-    container.addEventListener('mouseleave', () => {
-      material.uniforms.uHover.value = 0.0
-    })
-  })
-}
-
-// Function to update grid planes on resize
-const updateGridPlanesPositions = () => {
-  gridPlanes.forEach((item) => {
-    item.renderer.setSize(item.container.offsetWidth, item.container.offsetHeight)
-    item.camera.aspect = item.container.offsetWidth / item.container.offsetHeight
-    item.camera.updateProjectionMatrix()
-  })
-}
-
-// Function to update plane positions on resize
-const updatePlanesPositions = () => {
-  planes.forEach((plane) => {
-    // Update plane dimensions to match canvas
-    plane.geometry.dispose()
-    plane.geometry = new THREE.PlaneGeometry(canvas.clientWidth, canvas.clientHeight, 32, 32)
-  })
-}
 
 // Only track mouse movement in the hero section
 document.querySelector('section:first-child').addEventListener('mousemove', (event) => {
@@ -276,33 +205,47 @@ document.querySelector('section:first-child').addEventListener('mousemove', (eve
   }
 })
 
-// Handle window resize
+// Handle window resize with proper debouncing
+let resizeTimeout;
 const handleResize = () => {
-  // Get hero section dimensions
-  const heroSection = document.querySelector('section:first-child')
-  const width = heroSection.clientWidth
-  const height = heroSection.clientHeight
-  
-  // Recalculate FOV
-  const newfov = 2 * Math.atan((height/2)/distance) * (180/Math.PI)
-  camera.fov = newfov
-  camera.aspect = width / height
-  camera.updateProjectionMatrix()
-  
-  // Update renderer size to match hero section
-  renderer.setSize(width, height)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-  
-  // Update plane positions
-  updatePlanesPositions()
-  
-  // Update grid plane positions
-  updateGridPlanesPositions()
+  clearTimeout(resizeTimeout);
+  resizeTimeout = setTimeout(() => {
+    // Get hero section dimensions
+    const heroSection = document.querySelector('section:first-child')
+    const width = heroSection.clientWidth
+    const height = heroSection.clientHeight
+    
+    // Recalculate FOV
+    const newfov = 2 * Math.atan((height/2)/distance) * (180/Math.PI)
+    camera.fov = newfov
+    camera.aspect = width / height
+    camera.updateProjectionMatrix()
+    
+    // Update renderer size to match hero section
+    renderer.setSize(width, height)
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+    
+    // Update plane positions
+    updatePlanesPositions()
+    
+    // Update scroll-based animations
+    ScrollTrigger.refresh();
+    scroll.update();
+  }, 200);
 }
 
 window.addEventListener('resize', handleResize)
 
-// GSAP Marquee Animation
+// Function to update plane positions on resize
+const updatePlanesPositions = () => {
+  planes.forEach((plane) => {
+    // Update plane dimensions to match canvas
+    plane.geometry.dispose()
+    plane.geometry = new THREE.PlaneGeometry(canvas.clientWidth, canvas.clientHeight, 32, 32)
+  })
+}
+
+// GSAP Marquee Animation - optimized for Locomotive Scroll
 const setupMarquee = () => {
   const marqueeContainers = document.querySelectorAll('.marquee-container')
   
@@ -316,7 +259,7 @@ const setupMarquee = () => {
     const duration = index === 0 ? 40 : 45 // First container faster, second slower
     const direction = index === 0 ? -1 : -1 // Direction: -1 for left, 1 for right
     
-    // Set up GSAP animation
+    // Set up GSAP animation with better ScrollTrigger integration
     gsap.to(wrappers, {
       x: direction * wrapperWidth,
       ease: 'none',
@@ -324,9 +267,41 @@ const setupMarquee = () => {
       duration: duration,
       modifiers: {
         x: gsap.utils.unitize(x => parseFloat(x) % wrapperWidth) // Keep it wrapping
+      },
+      scrollTrigger: {
+        trigger: container,
+        start: 'top bottom',
+        end: 'bottom top',
+        scroller: "[data-scroll-container]",
+        toggleActions: 'play pause resume pause'
       }
     })
   })
+}
+
+// Add headings animation
+const setupHeadingsAnimation = () => {
+  // Target all section headings
+  const headings = document.querySelectorAll('h2[data-scroll]');
+  
+  headings.forEach(heading => {
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: heading,
+        start: 'top 80%',
+        end: 'bottom 20%',
+        scroller: "[data-scroll-container]",
+        toggleActions: 'play none none reverse'
+      }
+    });
+    
+    tl.from(heading, {
+      y: 50,
+      opacity: 0,
+      duration: 0.8,
+      ease: 'power3.out'
+    });
+  });
 }
 
 // Animation loop
@@ -345,25 +320,14 @@ const animate = () => {
     } else {
       plane.material.uniforms.uMoving.value = 0
     }
-  })
-  
-  // Update and render grid planes
-  gridPlanes.forEach(item => {
-    const currentMaterial = item.material
     
-    // Update time
-    currentMaterial.uniforms.time.value = clock.getElapsedTime() * params.animationSpeed
-    
-    // Apply movement decay
-    const currentMoving = currentMaterial.uniforms.uMoving.value
-    if (currentMoving > 0.01) {
-      currentMaterial.uniforms.uMoving.value *= params.movementDecay
-    } else {
-      currentMaterial.uniforms.uMoving.value = 0
+    // Update scroll progress if available
+    if (plane.material.uniforms.uScrollProgress) {
+      const scrollTop = scroll.scroll.instance.scroll.y;
+      const scrollMax = document.body.scrollHeight - window.innerHeight;
+      const scrollProgress = Math.min(Math.max(scrollTop / scrollMax, 0), 1);
+      plane.material.uniforms.uScrollProgress.value = scrollProgress;
     }
-    
-    // Render this grid item
-    item.renderer.render(item.scene, item.camera)
   })
   
   // Render scene
@@ -372,8 +336,8 @@ const animate = () => {
 
 // Initialize everything once the DOM is fully loaded
 window.addEventListener('DOMContentLoaded', () => {
-  setupGridEffect()
   setupMarquee()
+  setupHeadingsAnimation()
   handleResize()
   animate()
 })
@@ -381,17 +345,40 @@ window.addEventListener('DOMContentLoaded', () => {
 // Wait for document load then initialize
 if (document.readyState === 'loading') {
   window.addEventListener('DOMContentLoaded', () => {
-    setupGridEffect()
     setupMarquee()
+    setupHeadingsAnimation()
   })
 } else {
-  setupGridEffect()
   setupMarquee()
+  setupHeadingsAnimation()
 }
 
 // Initialize
 handleResize()
 animate()
 
-// Update plane positions on scroll
-// scroll.on('scroll', updatePlanesPositions)
+// Update positions on scroll with throttling for better performance
+let lastScrollTime = 0;
+scroll.on('scroll', (instance) => {
+  const now = Date.now();
+  if (now - lastScrollTime > 16) { // Limit to ~60fps
+    // Update ScrollTrigger
+    ScrollTrigger.update();
+    
+    // Update Three.js elements for smoother parallax
+    const scrollY = instance.scroll.y;
+    const heroSection = document.querySelector('section:first-child');
+    const heroRect = heroSection.getBoundingClientRect();
+    
+    // Apply parallax to Three.js planes only when hero section is visible
+    if (heroRect.bottom > 0 && heroRect.top < window.innerHeight) {
+      planes.forEach((plane, index) => {
+        // Subtle parallax effect on planes
+        const parallaxFactor = 0.15 * (index + 1);
+        plane.position.y = scrollY * parallaxFactor;
+      });
+    }
+    
+    lastScrollTime = now;
+  }
+});
