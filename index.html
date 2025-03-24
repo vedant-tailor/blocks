@@ -6,26 +6,138 @@
     <title>Three.js with Tailwind</title>
     <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
     <style>
-      body { overflow: hidden; }
+      body { overflow-x: hidden; }
+      .marquee-container {
+        overflow: hidden;
+        white-space: nowrap;
+        position: relative;
+        width: 100%;
+        max-width: 100vw;
+        padding: 1.5rem 0;
+      }
+      .marquee-wrapper {
+        display: inline-block;
+        padding: 0.5rem 0;
+      }
+      .image-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 2rem;
+        padding: 2rem;
+      }
+      .grid-item {
+        position: relative;
+        overflow: hidden;
+        border-radius: 0.5rem;
+        aspect-ratio: 1/1;
+      }
+      .grid-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
     </style>
   </head>
-  <body class="bg-transparent text-white">
-    <!-- Canvas positioned at the back, z-index -10 -->
-    <canvas id="three-canvas" class="fixed top-0 left-0 w-full h-full -z-10"></canvas>
+  <body class="bg-gray-900 text-white">
+    <!-- Hero section with canvas background (limited to 100vh) -->
+    <section class="relative h-screen overflow-hidden">
+      <!-- Canvas positioned absolute within hero section -->
+      <canvas id="three-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+      
+      <!-- Images container positioned within hero section -->
+      <div class="images-container absolute top-0 left-0 w-full h-full flex flex-col items-center justify-center">
+        <img src="/img2.jpg" alt="Image 1" class="absolute w-1/2 opacity-0">
+        <img src="/img2.jpg" alt="Image 2" class="absolute w-1/2 opacity-0">
+        <img src="/img2.jpg" alt="Image 3" class="absolute w-1/2 opacity-0">
+      </div>
+      
+      <!-- Content in hero section -->
+      <div class="relative h-full flex flex-col items-center justify-center">
+        <h1 class="text-5xl md:text-8xl font-bold mb-4 leading-none">The Slider</h1>
+        <p class="text-base md:text-xl">Be creative your way!</p>
+      </div>
+    </section>
     
-    <!-- Images container positioned at the back with fixed positioning -->
-    <div class="images-container fixed top-0 left-0 w-full h-full -z-10 flex flex-col items-center justify-center">
-      <img src="/img2.jpg" alt="Image 1" class="absolute w-1/2 opacity-0">
-      <img src="/img2.jpg" alt="Image 2" class="absolute w-1/2 opacity-0">
-      <img src="/img2.jpg" alt="Image 3" class="absolute w-1/2 opacity-0">
-    </div>
+    <!-- Content below the hero section (these start after 100vh) -->
+    <main class="bg-gray-900">
+      <!-- Marquee section using GSAP -->
+      <section class="marquee-section h-screen flex flex-col items-center justify-center py-0 bg-black/90 overflow-hidden">
+        <div class="marquee-container">
+          <div class="marquee-wrapper">
+            <h2 class="text-5xl md:text-7xl font-bold px-4 uppercase tracking-wider transform -rotate-3">
+              <span class="inline-block">THREE.JS VISUAL EXPERIENCE</span>
+              <span class="inline-block mx-4 text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 inline" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </h2>
+          </div>
+          <div class="marquee-wrapper">
+            <h2 class="text-5xl md:text-7xl font-bold px-4 uppercase tracking-wider transform -rotate-3">
+              <span class="inline-block">THREE.JS VISUAL EXPERIENCE</span>
+              <span class="inline-block mx-4 text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 inline" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </h2>
+          </div>
+        </div>
+
+        <div class="marquee-container mt-16" style="transform: rotate(2deg);">
+          <div class="marquee-wrapper">
+            <h2 class="text-5xl md:text-7xl font-bold px-4 uppercase tracking-wider" style="text-shadow: 1px 1px 0 #fff0, -1px -1px 0 #fff0, 1px -1px 0 #fff0, -1px 1px 0 #fff0; -webkit-text-stroke: 1px white; color: transparent;">
+              <span class="inline-block">NEXT-GEN GLSL SLIDER</span>
+              <span class="inline-block mx-4 text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 inline" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </h2>
+          </div>
+          <div class="marquee-wrapper">
+            <h2 class="text-5xl md:text-7xl font-bold px-4 uppercase tracking-wider" style="text-shadow: 1px 1px 0 #fff0, -1px -1px 0 #fff0, 1px -1px 0 #fff0, -1px 1px 0 #fff0; -webkit-text-stroke: 1px white; color: transparent;">
+              <span class="inline-block">NEXT-GEN GLSL SLIDER</span>
+              <span class="inline-block mx-4 text-yellow-500">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 inline" viewBox="0 0 20 20" fill="currentColor">
+                  <path fill-rule="evenodd" d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm12 12H4l4-8 3 6 2-4 3 6z" clip-rule="evenodd" />
+                </svg>
+              </span>
+            </h2>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Image grid section -->
+      <section class="grid-section py-16">
+        <div class="container mx-auto">
+          <h2 class="text-3xl md:text-5xl font-bold mb-10 text-center">Our Gallery</h2>
+          <div class="image-grid">
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 1" class="grid-image">
+            </div>
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 2" class="grid-image">
+            </div>
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 3" class="grid-image">
+            </div>
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 4" class="grid-image">
+            </div>
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 5" class="grid-image">
+            </div>
+            <div class="grid-item">
+              <img src="/img2.jpg" alt="Grid Image 6" class="grid-image">
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
     
-    <!-- Content on top -->
-    <div class="relative z-10 flex flex-col items-center justify-center min-h-screen">
-      <h1 class="text-[clamp(12rem,20vw,30rem)] md:text-[clamp(15rem,25vw,40rem)] xl:text-[50vw] font-bold mb-4 leading-none">The Slider</h1>
-      <p class="text-xl">Be creative your way!</p>
-    </div>
-    
+    <!-- Import GSAP -->
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
