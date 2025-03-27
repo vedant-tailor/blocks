@@ -3,67 +3,16 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls'
 import vertexShader from './shaders/vertex.glsl'
 import fragmentShader from './shaders/fragment.glsl'
-import LocomotiveScroll from 'locomotive-scroll'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
-// SplitText is a premium GSAP plugin, so we won't use it
 
 // Register GSAP plugins
 gsap.registerPlugin(ScrollTrigger)
 
+gsap.config({ force3D: false }); 
+
 // Create the scene
 const scene = new THREE.Scene()
-
-// Initialize locomotive scroll with optimized settings
-const scroll = new LocomotiveScroll({
-  el: document.querySelector('[data-scroll-container]'),
-  smooth: true,
-  multiplier: 1,
-  lerp: 0.1, // Slightly increased for smoother transitions
-  smartphone: {
-    smooth: true,
-    multiplier: 0.8 // Reduced multiplier for mobile for better performance
-  },
-  tablet: {
-    smooth: true,
-    multiplier: 0.9
-  },
-  reloadOnContextChange: true,
-  inertia: 0.6 // Added inertia for more natural feeling
-})
-
-// Better ScrollTrigger integration with Locomotive Scroll
-ScrollTrigger.scrollerProxy("[data-scroll-container]", {
-  scrollTop(value) {
-    return arguments.length 
-      ? scroll.scrollTo(value, { duration: 0, disableLerp: true })
-      : scroll.scroll.instance.scroll.y;
-  },
-  getBoundingClientRect() {
-    return {
-      top: 0, 
-      left: 0, 
-      width: window.innerWidth, 
-      height: window.innerHeight
-    };
-  },
-  pinType: document.querySelector("[data-scroll-container]").style.transform ? "transform" : "fixed"
-});
-
-// Each time the window updates, we should refresh ScrollTrigger and then update LocomotiveScroll
-ScrollTrigger.addEventListener("refresh", () => scroll.update());
-
-// After everything is set up, refresh() ScrollTrigger and update LocomotiveScroll
-ScrollTrigger.refresh();
-
-// Handle resize events properly
-window.addEventListener("resize", () => {
-  // Delay the update for better performance
-  setTimeout(() => {
-    ScrollTrigger.refresh();
-    scroll.update();
-  }, 200);
-});
 
 // Set fixed values for animation parameters
 const params = {
@@ -71,11 +20,11 @@ const params = {
   distortionIntensity: 0.08,
   distanceMultiplier: 0.6,
   animationSpeed: 1.8,
-  movementDecay: 0.97 // How quickly the movement effect fades
+  movementDecay: 0.97
 }
 
 // Create the camera with calculated FOV
-const distance = 400  // Reduced distance for better fit within viewport
+const distance = 400
 const fov = 2 * Math.atan((window.innerHeight/2)/distance) * (180/Math.PI)
 const camera = new THREE.PerspectiveCamera(fov, window.innerWidth / window.innerHeight, 0.1, 1000)
 camera.position.z = distance
@@ -123,13 +72,13 @@ images.forEach((img, index) => {
         uTexture: { value: texture },
         uMouse: { value: new THREE.Vector2(0.5, 0.5) },
         uHover: { value: 0.0 },
-        uMoving: { value: 0.0 }, // New uniform for mouse movement strength
-        uLastPos: { value: new THREE.Vector2(0.5, 0.5) }, // Store last position for delayed animation
+        uMoving: { value: 0.0 },
+        uLastPos: { value: new THREE.Vector2(0.5, 0.5) },
         uBlockCount: { value: params.blockCount },
         uDistortionIntensity: { value: params.distortionIntensity },
         uDistanceMultiplier: { value: params.distanceMultiplier },
         uAnimationSpeed: { value: params.animationSpeed },
-        uScrollProgress: { value: 0.0 } // New uniform for scroll progress
+        uScrollProgress: { value: 0.0 }
       },
       side: THREE.DoubleSide
     })
@@ -162,7 +111,7 @@ document.querySelector('section:first-child').addEventListener('mousemove', (eve
   
   // Calculate normalized coordinates within the hero section
   const x = (event.clientX - rect.left) / rect.width
-  const y = (event.clientY - rect.top) / rect.height  // Remove the 1.0 - inversion
+  const y = (event.clientY - rect.top) / rect.height
   
   const currentMouse = new THREE.Vector2(x, y)
   
@@ -230,7 +179,6 @@ const handleResize = () => {
     
     // Update scroll-based animations
     ScrollTrigger.refresh();
-    scroll.update();
   }, 200);
 }
 
@@ -245,7 +193,7 @@ const updatePlanesPositions = () => {
   })
 }
 
-// GSAP Marquee Animation - optimized for Locomotive Scroll
+// GSAP Marquee Animation
 const setupMarquee = () => {
   const marqueeContainers = document.querySelectorAll('.marquee-container')
   
@@ -259,20 +207,19 @@ const setupMarquee = () => {
     const duration = index === 0 ? 40 : 45 // First container faster, second slower
     const direction = index === 0 ? -1 : -1 // Direction: -1 for left, 1 for right
     
-    // Set up GSAP animation with better ScrollTrigger integration
+    // Set up GSAP animation
     gsap.to(wrappers, {
       x: direction * wrapperWidth,
       ease: 'none',
-      repeat: -1, // Infinite repeat
+      repeat: -1,
       duration: duration,
       modifiers: {
-        x: gsap.utils.unitize(x => parseFloat(x) % wrapperWidth) // Keep it wrapping
+        x: gsap.utils.unitize(x => parseFloat(x) % wrapperWidth)
       },
       scrollTrigger: {
         trigger: container,
         start: 'top bottom',
         end: 'bottom top',
-        scroller: "[data-scroll-container]",
         toggleActions: 'play pause resume pause'
       }
     })
@@ -281,7 +228,6 @@ const setupMarquee = () => {
 
 // Add headings animation
 const setupHeadingsAnimation = () => {
-  // Target all section headings
   const headings = document.querySelectorAll('h2[data-scroll]');
   
   headings.forEach(heading => {
@@ -290,7 +236,6 @@ const setupHeadingsAnimation = () => {
         trigger: heading,
         start: 'top 80%',
         end: 'bottom 20%',
-        scroller: "[data-scroll-container]",
         toggleActions: 'play none none reverse'
       }
     });
@@ -302,6 +247,99 @@ const setupHeadingsAnimation = () => {
       ease: 'power3.out'
     });
   });
+}
+
+// Setup VT image zoom on scroll
+const setupVTZoomEffect = () => {
+  const vtSection = document.querySelector('.vtsection'); // Select by Tailwind class
+  const vtImage = document.getElementById('vt-zoom-svg');
+  
+  if (!vtSection || !vtImage) {
+    console.log('VT elements not found, attempting alternative selectors');
+    // Try alternative selector - the section containing VT image
+    const altSection = document.querySelector('section:has(#vt-zoom-image)');
+    if (altSection && vtImage) {
+      setupVTZoom(altSection, vtImage);
+      return;
+    }
+    return;
+  }
+  
+  setupVTZoom(vtSection, vtImage);
+}
+
+// Helper function to setup the zoom effect
+const setupVTZoom = (section, image) => {
+  // Create a GSAP ScrollTrigger for the zoom effect
+  gsap.fromTo(image, 
+    { 
+      scale: 1,
+      opacity: 1
+    }, 
+    {
+      scale: 8,
+      opacity: 0.8,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: section,
+        start: "top top", 
+        end: "+=300%",
+        scrub: 1,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        fastScrollEnd: false,
+        onUpdate: (self) => {
+          // Add progressive blur effect to parent container
+          const progress = self.progress;
+          const blurAmount = progress * 10; // Max 10px blur
+          image.parentElement.style.backdropFilter = `blur(${blurAmount}px)`;
+        }
+      }
+    }
+  );
+  
+  // Optional: Add slight rotation for more dynamic effect
+  gsap.to(image, {
+    rotation: 5,
+    scrollTrigger: {
+      trigger: section,
+      start: "top top",
+      end: "+=300%",
+      scrub: 1.5,
+    }
+  });
+  
+  // Add slight y-axis movement for parallax effect
+  gsap.to(image, {
+    y: 50,
+    scrollTrigger: {
+      trigger: section,
+      start: "top top",
+      end: "+=300%",
+      scrub: 2,
+    }
+  });
+  
+  // Create text reveal effect
+  const textElement = document.createElement('div');
+  textElement.className = 'absolute text-white text-4xl md:text-6xl font-bold opacity-0 z-20';
+  textElement.textContent = 'Visual Experience';
+  section.querySelector('.sticky').appendChild(textElement);
+  
+  gsap.fromTo(textElement, 
+    { opacity: 0, y: 50 },
+    { 
+      opacity: 1, 
+      y: 0, 
+      scrollTrigger: {
+        trigger: section,
+        start: "top+=60% top",
+        end: "+=50%",
+        scrub: true
+      }
+    }
+  );
 }
 
 // Animation loop
@@ -321,13 +359,11 @@ const animate = () => {
       plane.material.uniforms.uMoving.value = 0
     }
     
-    // Update scroll progress if available
-    if (plane.material.uniforms.uScrollProgress) {
-      const scrollTop = scroll.scroll.instance.scroll.y;
-      const scrollMax = document.body.scrollHeight - window.innerHeight;
-      const scrollProgress = Math.min(Math.max(scrollTop / scrollMax, 0), 1);
-      plane.material.uniforms.uScrollProgress.value = scrollProgress;
-    }
+    // Update scroll progress
+    const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+    const scrollMax = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollProgress = Math.min(Math.max(scrollTop / scrollMax, 0), 1);
+    plane.material.uniforms.uScrollProgress.value = scrollProgress;
   })
   
   // Render scene
@@ -338,35 +374,21 @@ const animate = () => {
 window.addEventListener('DOMContentLoaded', () => {
   setupMarquee()
   setupHeadingsAnimation()
+  setupVTZoomEffect()
   handleResize()
   animate()
 })
 
-// Wait for document load then initialize
-if (document.readyState === 'loading') {
-  window.addEventListener('DOMContentLoaded', () => {
-    setupMarquee()
-    setupHeadingsAnimation()
-  })
-} else {
-  setupMarquee()
-  setupHeadingsAnimation()
-}
-
-// Initialize
-handleResize()
-animate()
-
 // Update positions on scroll with throttling for better performance
 let lastScrollTime = 0;
-scroll.on('scroll', (instance) => {
+window.addEventListener('scroll', () => {
   const now = Date.now();
   if (now - lastScrollTime > 16) { // Limit to ~60fps
     // Update ScrollTrigger
     ScrollTrigger.update();
     
     // Update Three.js elements for smoother parallax
-    const scrollY = instance.scroll.y;
+    const scrollY = window.pageYOffset || document.documentElement.scrollTop;
     const heroSection = document.querySelector('section:first-child');
     const heroRect = heroSection.getBoundingClientRect();
     
@@ -382,3 +404,7 @@ scroll.on('scroll', (instance) => {
     lastScrollTime = now;
   }
 });
+
+// Initialize
+handleResize()
+animate()
