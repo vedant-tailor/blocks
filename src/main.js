@@ -249,6 +249,118 @@ const setupHeadingsAnimation = () => {
   });
 }
 
+// Setup About Section Animation
+const setupAboutSectionAnimation = () => {
+  const aboutSection = document.querySelector('section:has(.text-blue-500)');
+  if (!aboutSection) return;
+  
+  // Animate welcome pill
+  const welcomePill = aboutSection.querySelector('.rounded-full');
+  gsap.from(welcomePill, {
+    y: -30,
+    opacity: 0,
+    duration: 0.8,
+    ease: 'back.out(1.7)',
+    scrollTrigger: {
+      trigger: aboutSection,
+      start: 'top 80%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Animate heading parts separately
+  const headingParts = aboutSection.querySelectorAll('h2 span');
+  gsap.from(headingParts, {
+    y: 80,
+    opacity: 0,
+    duration: 1,
+    stagger: 0.2,
+    ease: 'power3.out',
+    scrollTrigger: {
+      trigger: aboutSection,
+      start: 'top 70%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Animate divider line
+  const divider = aboutSection.querySelector('.w-24.h-1');
+  gsap.from(divider, {
+    width: 0,
+    opacity: 0,
+    duration: 1.2,
+    ease: 'power2.out',
+    scrollTrigger: {
+      trigger: aboutSection,
+      start: 'top 60%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Animate description text
+  const description = aboutSection.querySelector('p:not(.text-gray-400)');
+  gsap.from(description, {
+    y: 50,
+    opacity: 0,
+    duration: 1,
+    ease: 'power2.out',
+    scrollTrigger: {
+      trigger: aboutSection,
+      start: 'top 50%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Animate feature cards
+  const featureCards = aboutSection.querySelectorAll('.grid > div');
+  gsap.from(featureCards, {
+    y: 100,
+    opacity: 0,
+    duration: 0.8,
+    stagger: 0.15,
+    ease: 'power2.out',
+    scrollTrigger: {
+      trigger: '.grid',
+      start: 'top 80%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Animate decorative elements
+  const blurCircles = aboutSection.querySelectorAll('.rounded-full.bg-blue-600, .rounded-full.bg-blue-500');
+  gsap.from(blurCircles, {
+    scale: 0.5,
+    opacity: 0,
+    duration: 1.5,
+    stagger: 0.3,
+    ease: 'power2.inOut',
+    scrollTrigger: {
+      trigger: aboutSection,
+      start: 'top 80%',
+      toggleActions: 'play none none reverse'
+    }
+  });
+  
+  // Add hover animations for feature cards
+  featureCards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      gsap.to(card, {
+        y: -10,
+        duration: 0.3,
+        ease: 'power2.out'
+      });
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      gsap.to(card, {
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      });
+    });
+  });
+}
+
 // Setup VT image zoom on scroll
 const setupVTZoomEffect = () => {
   const vtSection = document.querySelector('.vtsection'); // Select by Tailwind class
@@ -375,6 +487,7 @@ window.addEventListener('DOMContentLoaded', () => {
   setupMarquee()
   setupHeadingsAnimation()
   setupVTZoomEffect()
+  setupAboutSectionAnimation()
   handleResize()
   animate()
 })
